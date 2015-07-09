@@ -1,5 +1,7 @@
 
 var Twitter = require('twitter');
+//var daemon = require('daemon');
+//daemon.start();
 // var http = require ('http');
 
 // var options = {
@@ -51,16 +53,19 @@ var HighlanderCMS = 3271208005,			// User IDs
 
 /* Streaming API listening for HighlanderCMS tweets */ 
 var getTweet = function () {
+	var state = 'checkTwitter';
 	client.stream('statuses/filter', {follow: Brooke}, function(stream) {
 		
 		var tweetFn = function(tweet) {
-			console.log("Got the tweet!");
-			console.dir(tweet);
+			if (state === 'checkTwitter') {
+				console.log("Got the tweet!");
+				console.dir(tweet);
 
 				console.log("calling Tweetfn");
 				postDM();
-				stream.destroy();
-
+				//stream.destroy();
+				state = 'checkDM';
+			}
 		}
 
 		stream.on('data', tweetFn);
@@ -71,6 +76,16 @@ var getTweet = function () {
 
 		
 	}); 
+
+	client.stream('user', {}, function(stream) {
+		stream.on('data', function (message){
+			if (state === 'checkDM') {
+				console.dir(message);
+				state = 'checkTwitter';
+			}
+			
+		});
+	});
 }
 
 /* send the inital DM */ 
@@ -83,40 +98,42 @@ var postDM = function () {
 					console.log("DM successful");
 					console.log(tweet);
 				}
-}); 
-}
-
-var checkDM = function() {
-		client.get('direct_messages', { count:1}, function(error, tweet, response){
-		if (error) {
-			console.log("error:(");
-				//console.log(error);
-		};
-		if (!error) {
-			console.log("response");
-			console.log(tweet);
-			clearInterval(process);
-		}
 	}); 
 }
 
 getTweet();
 
-var process = setInterval(checkDM(), 500);
-// use the updated article time 
+var checkDM = function() {
+	console.log('checkDM running');
+	var options = {
+		count: 1
+	}, p, sinceId;
+	
+	
 
+	
+		client.get('direct_messages', options, function(error, tweet, response){
+			console.log('DM running');
+			if (error) {
+				console.log("error:(");
+					
+				return error
+			} else {
+				if (!sinceId) {
+					console.log('setting sinceId');
+					options.since_id = tweet.id;
+					sinceId = tweet.id;
+					console.dir(tweet);
 
+				} else {
+					console.log("Latest DM response");
+					console.log(tweet);
+				}
+			}
+		});
+	
 
-
-
-/*client.get('search/tweets', {q: 'node.js'}, function(error, tweets, response){
-	console.log(tweets);
-});*/
-
-
-
-
-
-
+	
+}
 
 
