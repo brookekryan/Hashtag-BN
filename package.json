@@ -1,7 +1,10 @@
 {
-	"name": "hashtagbn1",
-	"version": "0.0.0",
-	"scripts": {
-    	"start": "node ./node_modules/www"
-  	}
+  "name": "hashtagbn1",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "node ./node_modules/www"
+  },
+  "dependencies": {
+    "string": "^3.3.0"
+  }
 }

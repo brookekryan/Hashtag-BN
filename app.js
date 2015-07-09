@@ -1,7 +1,7 @@
 
 var Twitter = require('twitter');
-//var daemon = require('daemon');
-//daemon.start();
+var S = require('string');		//Allows usage for .includes() method
+
 // var http = require ('http');
 
 // var options = {
@@ -66,16 +66,12 @@ var getTweet = function () {
 					postDM();
 					//stream.destroy();
 				}
-			}
+			}	
 		}
-
 		stream.on('data', tweetFn);
-
 		stream.on('error', function(error) {
 			console.log(error); 
 		});
-
-		
 	}); 
 
 	client.stream('user', {}, function(stream) {
@@ -99,40 +95,40 @@ var postDM = function () {
 					console.log("DM successful");
 					//console.log(tweet);
 				}
-	}); 
+}); 
 }
 
+// var checkDM = function() {
+// 		client.get('direct_messages', { count:1}, function(error, tweet, response){
+// 		if (error) {
+// 			console.log("error:(");
+// 				//console.log(error);
+// 		};
+// 		if (!error) {
+// 			console.log("response");
+// 			console.log(tweet);
+// 			clearInterval(process);
+// 		}
+// 	}); 
+// }
+
+if (S('hi#BN').contains('BN')) {
+	console.log("bowel movement\n\n");
+};
 getTweet();
 
-var checkDM = function() {
-	console.log('checkDM running');
-	var options = {
-		count: 1
-	}, p, sinceId;
-	
-	
 
-	
-		client.get('direct_messages', options, function(error, tweet, response){
-			console.log('DM running');
-			if (error) {
-				console.log("error:(");
-					
-				return error
-			} else {
-				if (!sinceId) {
-					console.log('setting sinceId');
-					options.since_id = tweet.id;
-					sinceId = tweet.id;
-					//console.dir(tweet);
+//var process = setInterval(checkDM(), 500);
+// use the updated article time 
 
-				} else {
-					console.log("Latest DM response");
-					//console.log(tweet);
-				}
-			}
-		});
-	
+
+
+
+
+/*client.get('search/tweets', {q: 'node.js'}, function(error, tweets, response){
+	console.log(tweets);
+});*/
+
 
 	
 }
