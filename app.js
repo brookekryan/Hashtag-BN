@@ -38,8 +38,6 @@ var twitterUserIds = {
 var startListening = function () {
 	/* send the inital DM */ 
 	var postDM = function (message) {
-		console.log("\n");
-		console.log("calling postDM");
 		client.post('direct_messages/new', {user: twitterUserIds.FakeKenBerger, text: message}, 
 				function(error, tweet, response) {
 					if (!error) {
@@ -56,17 +54,11 @@ var startListening = function () {
 	dateTime = '';
 	client.stream('statuses/filter', {follow: twitterUserIds.FakeKenBerger}, function(stream) {
 		var tweetFn = function(tweet) {
-			console.log('incomingTweet');
 			if (state === 'checkTwitter') {
 				if (S(tweet.text).contains(hashtags.BN)) {
 					var headline = tweet.text.replace(hashtags.BN, "");
-
-					console.log('Creating Article: ');
-					console.log('headline: ' + headline);
 					request(apiEndPoints.create + encodeURI(headline), function (error, response, body) {
 					  	if (!error && response.statusCode == 200) {
-							console.log('Return Data from Hub (Creating)');
-							console.dir(body);
 							contentData = JSON.parse(body);
 							if (contentData.versionId && contentData.id) {
 								console.dir(contentData);
@@ -93,18 +85,13 @@ var startListening = function () {
 		stream.on('data', function (message){
 			if (state === 'checkDM') {
 				if (message.direct_message) {
-					console.log(message.direct_message.sender_id);
 					isKen = message.direct_message.sender_id;
-					//console.log(isKen);
 					if (isKen === twitterUserIds.FakeKenBerger) {
-						console.log("something went right");
 						if (message.direct_message.text) {
 							if (S(message.direct_message.text).contains("#title")) {
 								var updatedValue = message.direct_message.text.replace('#title', '');
 								request(apiEndPoints.update.replace('{id}', contentId) + 'headline=' + encodeURI(updatedValue), function (error, response, body){
 									if (!error && response.statusCode == 200) {
-										console.log('Return Data from Hub (Updating)');
-										console.dir(body);
 										contentData = JSON.parse(body);
 										if (contentData.versionId && contentData.id) {
 											console.dir(contentData);
@@ -122,11 +109,8 @@ var startListening = function () {
 								var updatedValue = message.direct_message.text.replace('#body', '');
 								request(apiEndPoints.update.replace('{id}', contentId) + 'body=' + encodeURI(updatedValue), function (error, response, body){
 									if (!error && response.statusCode == 200) {
-										console.log('Return Data from Hub (Updating)');
-										console.dir(body);
 										contentData = JSON.parse(body);
 										if (contentData.versionId && contentData.id) {
-											console.dir(contentData);
 											postDM(tweetTexts.body.replace("{datetime}", contentData.dateUpdated));
 											versionId = contentData.versionId;
 											contentId = contentData.id;
