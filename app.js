@@ -15,10 +15,10 @@ var HighlanderCMS = 3271208005,			// User IDs
 	BN = "#BN",
 	tweetText, messageDM, isKen,
 	initial = "Story created. Reply #title to change title, #body to add to story, #publish to go live.",
-	title = "Title updated. Still listening for updates.1",
-	body = "Body updated. Still listening for updates.1",
-	publish = "Story is live on CBSSports.com/yourgoddangarticle/itproabblysucks/jk1",
-	dmMessage = "YEAH MR WHITE! YEAH SCIENCE! 1234";
+	title = "Title updated. Still listening for updates.",
+	body = "Body updated. Still listening for updates.",
+	publish = "Story is live on CBSSports.com/yourgoddangarticle/itproabblysucks/jk",
+	dmMessage = initial;
 
 /* Streaming API listening for HighlanderCMS tweets */ 
 var getTweet = function () {
@@ -90,9 +90,6 @@ var postDM = function () {
 		}); 
 }
 
-if (S('hi#BN').contains('BN')) {
-	console.log("bowel movement\n\n");
-};
 
 getTweet();
 
