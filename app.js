@@ -46,6 +46,8 @@ var client = new Twitter({
 var HighlanderCMS = 3271208005,			// User IDs 
 	FakeKenBerger = 3272041242,
 	Brooke = 3192578587,
+	BN = "#BN",
+	tweetText,
 	initial = "Story created. Reply #title to change title, #body to add to story, #publish to go live.",
 	title = "Title updated. Still listening for updates.",
 	body = "Body updated. Still listening for updates.",
@@ -58,13 +60,12 @@ var getTweet = function () {
 		
 		var tweetFn = function(tweet) {
 			if (state === 'checkTwitter') {
-				console.log("Got the tweet!");
-				console.dir(tweet);
-
-				console.log("calling Tweetfn");
-				postDM();
-				//stream.destroy();
-				state = 'checkDM';
+				tweetText=tweet.text;
+				if (S(tweetText).contains(BN)) {
+					console.dir(tweet.text);
+					postDM();
+					//stream.destroy();
+				}
 			}
 		}
 
@@ -96,7 +97,7 @@ var postDM = function () {
 			function(error, tweet, response) {
 				if (!error) {
 					console.log("DM successful");
-					console.log(tweet);
+					//console.log(tweet);
 				}
 	}); 
 }
@@ -123,11 +124,11 @@ var checkDM = function() {
 					console.log('setting sinceId');
 					options.since_id = tweet.id;
 					sinceId = tweet.id;
-					console.dir(tweet);
+					//console.dir(tweet);
 
 				} else {
 					console.log("Latest DM response");
-					console.log(tweet);
+					//console.log(tweet);
 				}
 			}
 		});
