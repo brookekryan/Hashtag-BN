@@ -2,33 +2,6 @@
 var Twitter = require('twitter');
 var S = require('string');		//Allows usage for .includes() method
 
-// var http = require ('http');
-
-// var options = {
-//   host: 'tnguyenmbpx8.cnet.cnwk',
-//   port: 8080,
-//   path: '/api/content/article/update',
-//   method: 'GET'
-// };
-
-// var req = http.request(options, function(res) {
-//   console.log('STATUS: ' + res.statusCode);
-//   console.log('HEADERS: ' + JSON.stringify(res.headers));
-//   res.setEncoding('utf8');
-//   res.on('data', function (chunk) {
-//     console.log('BODY: ' + chunk);
-//   });
-// });
-
-// req.on('error', function(e) {
-//   console.log('problem with request: ' + e.message);
-// });
-
-// // write data to request body
-// req.write('data\n');
-// req.write('data\n');
-// req.end();
-
 var client = new Twitter({
 	consumer_key: 'EE6dL94bOZPmnFS168pipLOXc',
 	consumer_secret: 'XEVpvUNVRjRedfp3cNjUd8fZOwf0StJ9FgpUKbZhfUR9Dw15TD',
@@ -36,36 +9,31 @@ var client = new Twitter({
 	access_token_secret: 'QMZPAKC79MZMKu7lE7GGq51n2ERHP6pRcSFV4Xmtbkn5l'
 });
 
-/* Twitter requests */ 
-/*client.post('statuses/update', {status: 'ringdingdingbingding'}, function(error,tweet,response){
-	if (!error) {
-		console.log(tweet);
-	}
-}); */
-
 var HighlanderCMS = 3271208005,			// User IDs 
 	FakeKenBerger = 3272041242,
 	Brooke = 3192578587,
 	BN = "#BN",
-	tweetText,
+	tweetText, messageDM, isKen,
 	initial = "Story created. Reply #title to change title, #body to add to story, #publish to go live.",
-	title = "Title updated. Still listening for updates.",
-	body = "Body updated. Still listening for updates.",
-	publish = "Story is live on CBSSports.com/yourgoddangarticle/itproabblysucks/jk";
+	title = "Title updated. Still listening for updates.1",
+	body = "Body updated. Still listening for updates.1",
+	publish = "Story is live on CBSSports.com/yourgoddangarticle/itproabblysucks/jk1",
+	dmMessage = "YEAH MR WHITE! YEAH SCIENCE! 1234";
 
 /* Streaming API listening for HighlanderCMS tweets */ 
 var getTweet = function () {
 	var state = 'checkTwitter';
-	client.stream('statuses/filter', {follow: Brooke}, function(stream) {
+	client.stream('statuses/filter', {follow: FakeKenBerger}, function(stream) {
 		
 		var tweetFn = function(tweet) {
 			if (state === 'checkTwitter') {
-				tweetText=tweet.text;
-				if (S(tweetText).contains(BN)) {
-					console.dir(tweet.text);
-					postDM();
-					//stream.destroy();
-				}
+				 tweetText=tweet.text;
+				 if (S(tweetText).contains(BN)) {
+				 	console.dir(tweet.text);
+				 	//postDM();
+				 	state = "checkDM"; 		//delete once tan does his shiet
+				 	//stream.destroy();
+				 }
 			}	
 		}
 		stream.on('data', tweetFn);
@@ -74,13 +42,34 @@ var getTweet = function () {
 		});
 	}); 
 
-	client.stream('user', {}, function(stream) {
+	client.stream('user', {user: Brooke}, function(stream) {
 		stream.on('data', function (message){
 			if (state === 'checkDM') {
-				console.dir(message);
-				state = 'checkTwitter';
-			}
-			
+				if (message.direct_message) {
+					console.log(message.direct_message.sender_id);
+					isKen = message.direct_message.sender_id;
+					//console.log(isKen);
+					if (isKen === FakeKenBerger) {
+						console.log("something went right");
+						if (message.direct_message.text) {
+							if (S(message.direct_message.text).contains("#title")) {
+								console.log("in the title case");
+								dmMessage = title;
+								postDM();
+							}
+							else if (S(message.direct_message.text).contains("#body")) {
+								dmMessage = body;
+								postDM();
+							}
+							else if (S(message.direct_message.text).contains("#publish")) {
+								dmMessage = publish;
+								postDM();
+								state = 'checkTwitter';
+							}
+						}
+					}
+				}
+			}		
 		});
 	});
 }
@@ -89,48 +78,25 @@ var getTweet = function () {
 var postDM = function () {
 	console.log("\n");
 	console.log("calling postDM");
-	client.post('direct_messages/new', {user: FakeKenBerger, text: title}, 
-			function(error, tweet, response) {
-				if (!error) {
-					console.log("DM successful");
-					//console.log(tweet);
-				}
-}); 
+	client.post('direct_messages/new', {user: FakeKenBerger, text: dmMessage}, 
+		function(error, tweet, response) {
+			if (!error) {
+				console.dir(tweet.text);
+				console.log("DM successful");
+			}
+			if (error) {
+				console.log(error);
+			}
+		}); 
 }
-
-// var checkDM = function() {
-// 		client.get('direct_messages', { count:1}, function(error, tweet, response){
-// 		if (error) {
-// 			console.log("error:(");
-// 				//console.log(error);
-// 		};
-// 		if (!error) {
-// 			console.log("response");
-// 			console.log(tweet);
-// 			clearInterval(process);
-// 		}
-// 	}); 
-// }
 
 if (S('hi#BN').contains('BN')) {
 	console.log("bowel movement\n\n");
 };
+
 getTweet();
 
-
-//var process = setInterval(checkDM(), 500);
-// use the updated article time 
-
-
-
-
-
-/*client.get('search/tweets', {q: 'node.js'}, function(error, tweets, response){
-	console.log(tweets);
-});*/
-
-
 	
-}
+
 
 
