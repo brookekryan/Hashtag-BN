@@ -23,10 +23,15 @@ var twitterUserIds = {
 	},
 	tweetTexts = {
 		initial : "Story created on {datetime}. Reply #title to change title, #body to add to story, #publish to go live.",
-		title : "Title updated. Still listening for updates.",
-		body : "Body updated. Still listening for updates.",
-		publish : "Story is live on CBSSports.com/yourgoddangarticle/itproabblysucks/jk"
-	};
+		title : "Title updated on {datetime}. Still listening for updates.",
+		body : "Body updated on {datetime}. Still listening for updates.",
+		publish : "Story is live on {datetime}."
+	},
+	apiEndPoints = {
+		create : 'http://tnguyenmbpx8.cnet.cnwk:8080/api/content/article/create?headline=',
+		update : 'http://tnguyenmbpx8.cnet.cnwk:8080/api/content/article/update/{id}?'
+	},
+	isKen;
 	
 
 /* Streaming API listening for HighlanderCMS tweets */ 
@@ -39,36 +44,28 @@ var startListening = function () {
 				function(error, tweet, response) {
 					if (!error) {
 						console.log("DM successful: " + message + "\n");
-						//console.log(tweet);
+					} else {
+						console.dir(error);
 					}
 		}); 
 	}
 
 	var state = 'checkTwitter',
 	versionId = '',
-	contentId = '';
-	client.stream('statuses/filter', {follow: twitterUserIds.dnt}, function(stream) {
-		
+	contentId = '',
+	dateTime = '';
+	client.stream('statuses/filter', {follow: twitterUserIds.FakeKenBerger}, function(stream) {
 		var tweetFn = function(tweet) {
 			console.log('incomingTweet');
 			if (state === 'checkTwitter') {
-				var options = {
-					host: 'tnguyenmbpx8.cnet.cnwk',
-					port: 8080,
-					path: '/api/content/article/update',
-					method: 'GET'
-				},
-				tweetText = tweet.text;
-				if (S(tweetText).contains(hashtags.BN)) {
+				if (S(tweet.text).contains(hashtags.BN)) {
 					var headline = tweet.text.replace(hashtags.BN, "");
-					headline
-					options.path = 'api/content/article/create?headline=' + encodeURI(headline);
 
-					console.log('Creating Article: ' + options.path);
+					console.log('Creating Article: ');
 					console.log('headline: ' + headline);
-					request('http://tnguyenmbpx8.cnet.cnwk:8080/api/content/article/create?headline=' + encodeURI(headline), function (error, response, body) {
+					request(apiEndPoints.create + encodeURI(headline), function (error, response, body) {
 					  	if (!error && response.statusCode == 200) {
-							console.log('Rerturn Data from Hub (Creating)');
+							console.log('Return Data from Hub (Creating)');
 							console.dir(body);
 							contentData = JSON.parse(body);
 							if (contentData.versionId && contentData.id) {
@@ -76,6 +73,7 @@ var startListening = function () {
 								postDM(tweetTexts.initial.replace("{datetime}", contentData.dateCreated));
 								versionId = contentData.versionId;
 								contentId = contentData.id;
+								dateTime = contentData.dateCreated;
 								state = 'checkDM';
 							}
 					  	} else {
@@ -91,13 +89,63 @@ var startListening = function () {
 		});
 	}); 
 
-	client.stream('user', {}, function(stream) {
+	client.stream('user', {user: twitterUserIds.FakeKenBerger}, function(stream) {
 		stream.on('data', function (message){
 			if (state === 'checkDM') {
-				console.dir(message);
-				state = 'checkTwitter';
-			}
-			
+				if (message.direct_message) {
+					console.log(message.direct_message.sender_id);
+					isKen = message.direct_message.sender_id;
+					//console.log(isKen);
+					if (isKen === twitterUserIds.FakeKenBerger) {
+						console.log("something went right");
+						if (message.direct_message.text) {
+							if (S(message.direct_message.text).contains("#title")) {
+								var updatedValue = message.direct_message.text.replace('#title', '');
+								request(apiEndPoints.update.replace('{id}', contentId) + 'headline=' + encodeURI(updatedValue), function (error, response, body){
+									if (!error && response.statusCode == 200) {
+										console.log('Return Data from Hub (Updating)');
+										console.dir(body);
+										contentData = JSON.parse(body);
+										if (contentData.versionId && contentData.id) {
+											console.dir(contentData);
+											postDM(tweetTexts.title.replace("{datetime}", contentData.dateUpdated));
+											versionId = contentData.versionId;
+											contentId = contentData.id;
+											dateTime = contentData.dateUpdated;
+										}
+								  	} else {
+								    	console.dir(error);
+								  	}
+								});
+							}
+							else if (S(message.direct_message.text).contains("#body")) {
+								var updatedValue = message.direct_message.text.replace('#body', '');
+								request(apiEndPoints.update.replace('{id}', contentId) + 'body=' + encodeURI(updatedValue), function (error, response, body){
+									if (!error && response.statusCode == 200) {
+										console.log('Return Data from Hub (Updating)');
+										console.dir(body);
+										contentData = JSON.parse(body);
+										if (contentData.versionId && contentData.id) {
+											console.dir(contentData);
+											postDM(tweetTexts.body.replace("{datetime}", contentData.dateUpdated));
+											versionId = contentData.versionId;
+											contentId = contentData.id;
+											dateTime = contentData.dateUpdated;
+										}
+								  	} else {
+								    	console.dir(error);
+								  	}
+								});
+							}
+							else if (S(message.direct_message.text).contains("#publish")) {
+								postDM(tweetTexts.publish.replace("{datetime}", dateTime));
+								console.log("http://tnguyenmbpx8.cnet.cnwk:8080/content/article/" + contentId + "/version/" + versionId);
+								state = 'checkTwitter';
+							}
+						}
+					}
+				}
+			}		
 		});
 	});
 
@@ -106,5 +154,6 @@ var startListening = function () {
 
 
 startListening();
+
 
 
